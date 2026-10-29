@@ -69,8 +69,10 @@ bartharm <- function(file_path = " ", saving_path = " ", save_format = "", simul
     hypers_tau <- Hypers(X_bio_matrix, Y_norm[,i], num_tree = num_tree_tau, beta = beta_tau, gamma = gamma_tau, normalize_Y = FALSE)
     
     # Use default options for BART forests
-    opts_mu <- Opts(update_sigma = FALSE)
-    opts_tau <- Opts(update_sigma = FALSE)
+    # cache_trees = FALSE: SoftBart otherwise keeps a copy of every forest at every iteration
+    # (memory grows ~100 KB per iteration); BARTharm never uses the cached forests
+    opts_mu <- Opts(update_sigma = FALSE, cache_trees = FALSE)
+    opts_tau <- Opts(update_sigma = FALSE, cache_trees = FALSE)
     
     alpha0 = 0.01
     beta0 = 0.01
