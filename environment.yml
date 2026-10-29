@@ -1,0 +1,22 @@
+name: bartharm
+channels:
+  - conda-forge
+dependencies:
+  - r-base=4.5
+  # BARTharm
+  - r-dplyr
+  - r-matrixstats
+  - r-caret
+  - r-mcmcpack
+  # SoftBart dependencies (SoftBart itself is installed from GitHub)
+  - r-rcpp
+  - r-rcpparmadillo
+  - r-glmnet
+  - r-scales
+  - r-truncnorm
+  - r-progress
+  - r-mass
+  - r-remotes
+  # toolchain for compiling SoftBart
+  - compilers
+  - make
