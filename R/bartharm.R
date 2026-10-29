@@ -22,9 +22,13 @@
 # - beta_mu, beta_tau: BART prior parameters for mu and tau forests.
 # - gamma_mu, gamma_tau: BART prior parameters controlling sparsity.
 # - var_scaling: Logical. If TRUE, harmonize variance across sites (requires site_col).
+# - fix_sigma_mu: Logical. If TRUE, the leaf scale sigma_mu of both forests is fixed at
+#   range(Y) / (2 k sqrt(num_tree)) (the BART calibration for an outcome that is not scaled to [-0.5, 0.5])
+#   instead of being updated. Updating it lets the mu/tau level trade-off drift without bound in long chains.
 
 bartharm <- function(file_path = " ", saving_path = " ", save_format = "", simulate_data = TRUE, bio_col = c(), iqm_col = c(), outcomes_col = c(), id_col = c(), site_col = c(), n_subjects = 1000, linear_tau = TRUE, linear_mu = TRUE,
-                     num_iter = 5000, burn_in = 500, thinning_interval = 2, num_tree_mu = 200, num_tree_tau = 50, beta_mu = 2, beta_tau = 2, gamma_mu = 0.95, gamma_tau = 0.95, var_scaling = FALSE){
+                     num_iter = 5000, burn_in = 500, thinning_interval = 2, num_tree_mu = 200, num_tree_tau = 50, beta_mu = 2, beta_tau = 2, gamma_mu = 0.95, gamma_tau = 0.95, var_scaling = FALSE,
+                     fix_sigma_mu = FALSE){
   
   # Load or simulate data
   if(simulate_data){
@@ -73,7 +77,16 @@ bartharm <- function(file_path = " ", saving_path = " ", save_format = "", simul
     # (memory grows ~100 KB per iteration); BARTharm never uses the cached forests
     opts_mu <- Opts(update_sigma = FALSE, cache_trees = FALSE)
     opts_tau <- Opts(update_sigma = FALSE, cache_trees = FALSE)
-    
+
+    if(fix_sigma_mu){
+      y_range <- diff(range(Y_norm[,i]))
+      hypers_mu$sigma_mu <- y_range / (2 * hypers_mu$k * sqrt(num_tree_mu))
+      hypers_tau$sigma_mu <- y_range / (2 * hypers_tau$k * sqrt(num_tree_tau))
+      opts_mu$update_sigma_mu <- FALSE
+      opts_tau$update_sigma_mu <- FALSE
+      cat("Fixed sigma_mu: mu", hypers_mu$sigma_mu, "| tau", hypers_tau$sigma_mu, "\n")
+    }
+
     alpha0 = 0.01
     beta0 = 0.01
     
